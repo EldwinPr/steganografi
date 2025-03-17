@@ -16,74 +16,162 @@
         </div>
         
         <div class="tab-content active" id="encode-tab">
-            <h2>Encode Message</h2>
-            <form id="encode-form" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="encode-image">Select Image:</label>
-                    <input type="file" id="encode-image" name="image" accept="image/*" required>
-                    <div class="image-preview" id="encode-preview"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="encode-message">Message:</label>
-                    <textarea id="encode-message" name="message" rows="4" required></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label for="encode-seed">Seed (optional):</label>
-                    <input type="text" id="encode-seed" name="seed" placeholder="Leave empty for random seed">
-                </div>
-                
-                <div class="form-group">
-                    <label for="encode-bits">Bits Used (1-3):</label>
-                    <select id="encode-bits" name="bitsUsed">
-                        <option value="1">1 (More subtle, less capacity)</option>
-                        <option value="2">2 (Balance)</option>
-                        <option value="3">3 (More capacity, less subtle)</option>
-                    </select>
-                </div>
-                
-                <button type="submit" class="btn">Encode</button>
-            </form>
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" data-subtab="encode-text">Text Message</button>
+                <button class="sub-tab-btn" data-subtab="encode-file">Hide File</button>
+            </div>
             
-            <div class="result" id="encode-result">
-                <h3>Result:</h3>
-                <div class="result-content">
-                    <p>Your encoded image will appear here.</p>
+            <div class="sub-tab-content active" id="encode-text-tab">
+                <h2>Encode Text Message</h2>
+                <form id="encode-text-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="encode-text-image">Select Carrier Image: (PNG)</label>
+                        <input type="file" id="encode-text-image" name="image" accept="image/*" required>
+                        <div class="image-preview" id="encode-text-preview"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="encode-text-message">Message:</label>
+                        <textarea id="encode-text-message" name="message" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="encode-text-seed">Seed (optional):</label>
+                        <input type="text" id="encode-text-seed" name="seed" placeholder="Leave empty for random seed">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="encode-text-bits">Bits Used (1-3):</label>
+                        <select id="encode-text-bits" name="bitsUsed">
+                            <option value="1">1 (More subtle, less capacity)</option>
+                            <option value="2">2 (Balance)</option>
+                            <option value="3">3 (More capacity, less subtle)</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn">Encode</button>
+                </form>
+                
+                <div class="result" id="encode-text-result">
+                    <h3>Result:</h3>
+                    <div class="result-content">
+                        <p>Your encoded image will appear here.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sub-tab-content" id="encode-file-tab">
+                <h2>Hide File in Image</h2>
+                <form id="encode-file-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="encode-file-image">Select Carrier Image: (PNG)</label>
+                        <input type="file" id="encode-file-image" name="image" accept="image/*" required>
+                        <div class="image-preview" id="encode-file-image-preview"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="encode-file-file">Select File to Hide:</label>
+                        <input type="file" id="encode-file-file" name="file" required>
+                        <div class="file-info" id="encode-file-info"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="encode-file-seed">Seed (optional):</label>
+                        <input type="text" id="encode-file-seed" name="seed" placeholder="Leave empty for random seed">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="encode-file-bits">Bits Used (1-3):</label>
+                        <select id="encode-file-bits" name="bitsUsed">
+                            <option value="1">1 (More subtle, less capacity)</option>
+                            <option value="2">2 (Balance)</option>
+                            <option value="3">3 (More capacity, less subtle)</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn">Encode</button>
+                </form>
+                
+                <div class="result" id="encode-file-result">
+                    <h3>Result:</h3>
+                    <div class="result-content">
+                        <p>Your encoded image will appear here.</p>
+                    </div>
                 </div>
             </div>
         </div>
         
         <div class="tab-content" id="decode-tab">
-            <h2>Decode Message</h2>
-            <form id="decode-form" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="decode-image">Select Image:</label>
-                    <input type="file" id="decode-image" name="image" accept="image/*" required>
-                    <div class="image-preview" id="decode-preview"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="decode-seed">Seed:</label>
-                    <input type="text" id="decode-seed" name="seed" placeholder="Enter the same seed used for encoding">
-                </div>
-                
-                <div class="form-group">
-                    <label for="decode-bits">Bits Used (1-3):</label>
-                    <select id="decode-bits" name="bitsUsed">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                    </select>
-                </div>
-                
-                <button type="submit" class="btn">Decode</button>
-            </form>
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" data-subtab="decode-text">Text Message</button>
+                <button class="sub-tab-btn" data-subtab="decode-file">Extract File</button>
+            </div>
             
-            <div class="result" id="decode-result">
-                <h3>Result:</h3>
-                <div class="result-content">
-                    <p>The decoded message will appear here.</p>
+            <div class="sub-tab-content active" id="decode-text-tab">
+                <h2>Decode Text Message</h2>
+                <form id="decode-text-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="decode-text-image">Select Image:</label>
+                        <input type="file" id="decode-text-image" name="image" accept="image/*" required>
+                        <div class="image-preview" id="decode-text-preview"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="decode-text-seed">Seed:</label>
+                        <input type="text" id="decode-text-seed" name="seed" placeholder="Enter the same seed used for encoding">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="decode-text-bits">Bits Used (1-3):</label>
+                        <select id="decode-text-bits" name="bitsUsed">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn">Decode</button>
+                </form>
+                
+                <div class="result" id="decode-text-result">
+                    <h3>Result:</h3>
+                    <div class="result-content">
+                        <p>The decoded message will appear here.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sub-tab-content" id="decode-file-tab">
+                <h2>Extract Hidden File</h2>
+                <form id="decode-file-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="decode-file-image">Select Image:</label>
+                        <input type="file" id="decode-file-image" name="image" accept="image/*" required>
+                        <div class="image-preview" id="decode-file-preview"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="decode-file-seed">Seed:</label>
+                        <input type="text" id="decode-file-seed" name="seed" placeholder="Enter the same seed used for encoding">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="decode-file-bits">Bits Used (1-3):</label>
+                        <select id="decode-file-bits" name="bitsUsed">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn">Decode</button>
+                </form>
+                
+                <div class="result" id="decode-file-result">
+                    <h3>Result:</h3>
+                    <div class="result-content">
+                        <p>The extracted file will appear here.</p>
+                    </div>
                 </div>
             </div>
         </div>

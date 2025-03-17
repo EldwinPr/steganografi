@@ -22,8 +22,10 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	// Set up API routes
-	http.HandleFunc("/api/encode", api.HandleEncode)
-	http.HandleFunc("/api/decode", api.HandleDecode)
+	http.HandleFunc("/api/encode/text", api.HandleEncodeText)
+	http.HandleFunc("/api/encode/file", api.HandleEncodeFile)
+	http.HandleFunc("/api/decode/text", api.HandleDecodeText)
+	http.HandleFunc("/api/decode/file", api.HandleDecodeFile)
 
 	// Serve the main HTML page
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

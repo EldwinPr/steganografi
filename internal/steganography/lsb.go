@@ -9,7 +9,7 @@ import (
 	"image/png"
 	"math"
 	"math/big"
-	"math/rand"
+	mathrand "math/rand"
 	"os"
 	"strconv"
 )
@@ -54,8 +54,8 @@ func NewLSBEncoder(seed string, bitsUsed int) (*LSBEncoder, error) {
 	}, nil
 }
 
-// EncodeMessage embeds a message into an image using LSB steganography
-func (e *LSBEncoder) EncodeMessage(inputPath, outputPath, message string) error {
+// EncodeData embeds binary data into an image using LSB steganography
+func (e *LSBEncoder) EncodeData(inputPath, outputPath string, data []byte) error {
 	// Open the input image
 	file, err := os.Open(inputPath)
 	if err != nil {
@@ -81,20 +81,19 @@ func (e *LSBEncoder) EncodeMessage(inputPath, outputPath, message string) error 
 		}
 	}
 
-	// Convert message to byte array with length prefix
-	messageBytes := []byte(message)
-	messageLength := uint32(len(messageBytes))
+	// Get data length
+	dataLength := uint32(len(data))
 
-	// Check if the message can fit in the image
-	maxBytes := (width*height*3*e.BitsUsed)/8 - 4 // 4 bytes for length
-	if int(messageLength) > maxBytes {
-		return errors.New("message too large for the image")
+	// Check if the data can fit in the image
+	maxBytes := (width*height*3*e.BitsUsed)/8 - 8 // 8 bytes for length and file extension length
+	if int(dataLength) > maxBytes {
+		return errors.New("data too large for the image")
 	}
 
-	// Create a byte slice for the length (4 bytes) + message
-	data := make([]byte, 4+messageLength)
-	binary.BigEndian.PutUint32(data[0:4], messageLength)
-	copy(data[4:], messageBytes)
+	// Create a byte slice for the length (4 bytes) + data
+	fullData := make([]byte, 4+dataLength)
+	binary.BigEndian.PutUint32(fullData[0:4], dataLength)
+	copy(fullData[4:], data)
 
 	// Use seed to determine pixel order
 	rng := NewSeededRNG(e.Seed)
@@ -105,25 +104,25 @@ func (e *LSBEncoder) EncodeMessage(inputPath, outputPath, message string) error 
 	for _, pixel := range pixels {
 		x, y := pixel.X, pixel.Y
 
-		if bitIndex/8 >= len(data) {
+		if bitIndex/8 >= len(fullData) {
 			break
 		}
 
 		r, g, b, a := rgbaImg.At(x, y).RGBA()
 
 		// Process each color channel
-		if bitIndex/8 < len(data) {
-			r = embedBits(r, data, bitIndex, e.BitsUsed)
+		if bitIndex/8 < len(fullData) {
+			r = embedBits(r, fullData, bitIndex, e.BitsUsed)
 			bitIndex += e.BitsUsed
 		}
 
-		if bitIndex/8 < len(data) {
-			g = embedBits(g, data, bitIndex, e.BitsUsed)
+		if bitIndex/8 < len(fullData) {
+			g = embedBits(g, fullData, bitIndex, e.BitsUsed)
 			bitIndex += e.BitsUsed
 		}
 
-		if bitIndex/8 < len(data) {
-			b = embedBits(b, data, bitIndex, e.BitsUsed)
+		if bitIndex/8 < len(fullData) {
+			b = embedBits(b, fullData, bitIndex, e.BitsUsed)
 			bitIndex += e.BitsUsed
 		}
 
@@ -146,19 +145,19 @@ func (e *LSBEncoder) EncodeMessage(inputPath, outputPath, message string) error 
 	return png.Encode(outFile, rgbaImg)
 }
 
-// DecodeMessage extracts a hidden message from an image
-func (e *LSBEncoder) DecodeMessage(inputPath string) (string, error) {
+// DecodeData extracts hidden binary data from an image
+func (e *LSBEncoder) DecodeData(inputPath string) ([]byte, error) {
 	// Open the input image
 	file, err := os.Open(inputPath)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer file.Close()
 
 	// Decode the image
 	img, _, err := image.Decode(file)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Get image bounds
@@ -199,19 +198,33 @@ func (e *LSBEncoder) DecodeMessage(inputPath string) (string, error) {
 	}
 
 	if len(extractedData) < 4 {
-		return "", errors.New("could not extract message length")
+		return nil, errors.New("could not extract data length")
 	}
 
-	// Get the message length
-	messageLength := binary.BigEndian.Uint32(extractedData[0:4])
+	// Get the data length
+	dataLength := binary.BigEndian.Uint32(extractedData[0:4])
 
-	if len(extractedData) < int(messageLength)+4 {
-		return "", errors.New("extracted data is shorter than expected")
+	if len(extractedData) < int(dataLength)+4 {
+		return nil, errors.New("extracted data is shorter than expected")
 	}
 
-	// Extract the message
-	message := string(extractedData[4 : 4+messageLength])
-	return message, nil
+	// Extract the data
+	data := extractedData[4 : 4+dataLength]
+	return data, nil
+}
+
+// EncodeMessage is a convenience method that encodes a text message
+func (e *LSBEncoder) EncodeMessage(inputPath, outputPath, message string) error {
+	return e.EncodeData(inputPath, outputPath, []byte(message))
+}
+
+// DecodeMessage is a convenience method that decodes a text message
+func (e *LSBEncoder) DecodeMessage(inputPath string) (string, error) {
+	data, err := e.DecodeData(inputPath)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
 
 // Helper functions
@@ -222,13 +235,13 @@ type Pixel struct {
 }
 
 // NewSeededRNG creates a deterministic random number generator from a seed
-func NewSeededRNG(seed int64) *rand.Rand {
-	source := rand.NewSource(seed)
-	return rand.New(source)
+func NewSeededRNG(seed int64) *mathrand.Rand {
+	source := mathrand.NewSource(seed)
+	return mathrand.New(source)
 }
 
 // generatePixelOrder creates a pseudo-random order of pixels based on the seed
-func generatePixelOrder(width, height int, rng *rand.Rand) []Pixel {
+func generatePixelOrder(width, height int, rng *mathrand.Rand) []Pixel {
 	pixels := make([]Pixel, width*height)
 
 	// Initialize with all pixels

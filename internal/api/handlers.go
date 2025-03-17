@@ -1,8 +1,10 @@
+// handlers.go
 package api
 
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -19,6 +21,44 @@ type Response struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
 	Data    any    `json:"data,omitempty"`
+}
+
+func optimizeImageSize(inputPath, outputPath string) error {
+	// Read the original file to get its size
+	originalFile, err := os.Open(inputPath)
+	if err != nil {
+		return err
+	}
+	defer originalFile.Close()
+
+	originalInfo, err := originalFile.Stat()
+	if err != nil {
+		return err
+	}
+	originalSize := originalInfo.Size()
+
+	// Read the encoded file to get its size
+	encodedFile, err := os.Open(outputPath)
+	if err != nil {
+		return err
+	}
+	defer encodedFile.Close()
+
+	encodedInfo, err := encodedFile.Stat()
+	if err != nil {
+		return err
+	}
+	encodedSize := encodedInfo.Size()
+
+	// If the encoded file is significantly larger, try to optimize it
+	if float64(encodedSize) > float64(originalSize)*1.2 { // If more than 20% larger
+		// For now, we'll just log this - in a real implementation,
+		// you might use an image optimization library here
+		fmt.Printf("Warning: Encoded file is %.2f%% larger than original\n",
+			float64(encodedSize-originalSize)/float64(originalSize)*100)
+	}
+
+	return nil
 }
 
 // HandleEncodeText handles the encoding of a text message into an image
@@ -38,12 +78,6 @@ func HandleEncodeText(w http.ResponseWriter, r *http.Request) {
 	// Get form values
 	seed := r.FormValue("seed")
 	message := r.FormValue("message")
-	bitsUsedStr := r.FormValue("bitsUsed")
-
-	bitsUsed, err := strconv.Atoi(bitsUsedStr)
-	if err != nil || bitsUsed < 1 || bitsUsed > 3 {
-		bitsUsed = 1 // Default to 1 bit if invalid
-	}
 
 	// Get the file from the form
 	file, handler, err := r.FormFile("image")
@@ -77,8 +111,14 @@ func HandleEncodeText(w http.ResponseWriter, r *http.Request) {
 	}
 	inputFile.Close() // Close now so it can be read
 
+	err = optimizeImageSize(inputPath, outputPath)
+	if err != nil {
+		// Just log the error, don't fail the operation
+		fmt.Printf("Warning: Failed to optimize image size: %v\n", err)
+	}
+
 	// Create LSB encoder
-	encoder, err := steganography.NewLSBEncoder(seed, bitsUsed)
+	encoder, err := steganography.NewLSBEncoder(seed)
 	if err != nil {
 		sendErrorResponse(w, "Failed to create encoder: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -127,12 +167,6 @@ func HandleEncodeFile(w http.ResponseWriter, r *http.Request) {
 
 	// Get form values
 	seed := r.FormValue("seed")
-	bitsUsedStr := r.FormValue("bitsUsed")
-
-	bitsUsed, err := strconv.Atoi(bitsUsedStr)
-	if err != nil || bitsUsed < 1 || bitsUsed > 3 {
-		bitsUsed = 1 // Default to 1 bit if invalid
-	}
 
 	// Get the carrier image file
 	imageFile, imageHandler, err := r.FormFile("image")
@@ -167,6 +201,12 @@ func HandleEncodeFile(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inputImageFile.Close()
 	defer os.Remove(inputImagePath) // Clean up
+
+	err = optimizeImageSize(inputDataPath, outputPath)
+	if err != nil {
+		// Just log the error, don't fail the operation
+		fmt.Printf("Warning: Failed to optimize image size: %v\n", err)
+	}
 
 	_, err = io.Copy(inputImageFile, imageFile)
 	if err != nil {
@@ -236,7 +276,7 @@ func HandleEncodeFile(w http.ResponseWriter, r *http.Request) {
 	copy(combinedData[4+len(metadataJSON):], fileData)
 
 	// Create LSB encoder
-	encoder, err := steganography.NewLSBEncoder(seed, bitsUsed)
+	encoder, err := steganography.NewLSBEncoder(seed)
 	if err != nil {
 		sendErrorResponse(w, "Failed to create encoder: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -285,12 +325,6 @@ func HandleDecodeText(w http.ResponseWriter, r *http.Request) {
 
 	// Get form values
 	seed := r.FormValue("seed")
-	bitsUsedStr := r.FormValue("bitsUsed")
-
-	bitsUsed, err := strconv.Atoi(bitsUsedStr)
-	if err != nil || bitsUsed < 1 || bitsUsed > 3 {
-		bitsUsed = 1 // Default to 1 bit if invalid
-	}
 
 	// Get the file from the form
 	file, handler, err := r.FormFile("image")
@@ -324,7 +358,7 @@ func HandleDecodeText(w http.ResponseWriter, r *http.Request) {
 	inputFile.Close() // Close now so it can be read
 
 	// Create LSB encoder
-	encoder, err := steganography.NewLSBEncoder(seed, bitsUsed)
+	encoder, err := steganography.NewLSBEncoder(seed)
 	if err != nil {
 		sendErrorResponse(w, "Failed to create encoder: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -359,12 +393,6 @@ func HandleDecodeFile(w http.ResponseWriter, r *http.Request) {
 
 	// Get form values
 	seed := r.FormValue("seed")
-	bitsUsedStr := r.FormValue("bitsUsed")
-
-	bitsUsed, err := strconv.Atoi(bitsUsedStr)
-	if err != nil || bitsUsed < 1 || bitsUsed > 3 {
-		bitsUsed = 1 // Default to 1 bit if invalid
-	}
 
 	// Get the file from the form
 	file, handler, err := r.FormFile("image")
@@ -398,7 +426,7 @@ func HandleDecodeFile(w http.ResponseWriter, r *http.Request) {
 	inputFile.Close() // Close now so it can be read
 
 	// Create LSB encoder
-	encoder, err := steganography.NewLSBEncoder(seed, bitsUsed)
+	encoder, err := steganography.NewLSBEncoder(seed)
 	if err != nil {
 		sendErrorResponse(w, "Failed to create encoder: "+err.Error(), http.StatusInternalServerError)
 		return

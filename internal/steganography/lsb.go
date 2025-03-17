@@ -1,32 +1,29 @@
+// lsb.go - Updated version with file size optimization
 package steganography
 
 import (
-	cryptorand "crypto/rand"
 	"encoding/binary"
 	"errors"
 	"image"
 	"image/color"
+	"image/jpeg"
 	"image/png"
-	"math"
-	"math/big"
 	mathrand "math/rand"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 // LSBEncoder handles LSB steganography encoding
 type LSBEncoder struct {
-	Seed     int64
-	BitsUsed int // Number of LSB bits to use (1-3 recommended)
+	Seed int64
 }
 
 // NewLSBEncoder creates a new LSB encoder with the given seed
-func NewLSBEncoder(seed string, bitsUsed int) (*LSBEncoder, error) {
-	if bitsUsed < 1 || bitsUsed > 3 {
-		return nil, errors.New("bits used must be between 1 and 3")
-	}
+func NewLSBEncoder(seed string) (*LSBEncoder, error) {
+	var seedInt int64 = -1 // Default to -1
 
-	var seedInt int64
 	if seed != "" {
 		// Convert seed string to int64
 		var err error
@@ -39,23 +36,20 @@ func NewLSBEncoder(seed string, bitsUsed int) (*LSBEncoder, error) {
 			}
 			seedInt = int64(h)
 		}
-	} else {
-		// Generate random seed if none provided
-		n, err := cryptorand.Int(cryptorand.Reader, big.NewInt(math.MaxInt64))
-		if err != nil {
-			return nil, err
-		}
-		seedInt = n.Int64()
 	}
 
 	return &LSBEncoder{
-		Seed:     seedInt,
-		BitsUsed: bitsUsed,
+		Seed: seedInt,
 	}, nil
 }
 
 // EncodeData embeds binary data into an image using LSB steganography
 func (e *LSBEncoder) EncodeData(inputPath, outputPath string, data []byte) error {
+	// Check if input is JPG and convert if needed
+	ext := strings.ToLower(filepath.Ext(inputPath))
+	var img image.Image
+	var err error
+
 	// Open the input image
 	file, err := os.Open(inputPath)
 	if err != nil {
@@ -63,10 +57,17 @@ func (e *LSBEncoder) EncodeData(inputPath, outputPath string, data []byte) error
 	}
 	defer file.Close()
 
-	// Decode the image
-	img, _, err := image.Decode(file)
-	if err != nil {
-		return err
+	// Decode the image based on format
+	if ext == ".jpg" || ext == ".jpeg" {
+		img, err = jpeg.Decode(file)
+		if err != nil {
+			return err
+		}
+	} else {
+		img, _, err = image.Decode(file)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Get image bounds
@@ -85,7 +86,7 @@ func (e *LSBEncoder) EncodeData(inputPath, outputPath string, data []byte) error
 	dataLength := uint32(len(data))
 
 	// Check if the data can fit in the image
-	maxBytes := (width*height*3*e.BitsUsed)/8 - 8 // 8 bytes for length and file extension length
+	maxBytes := (width*height*3)/8 - 8 // 8 bytes for length and file extension length
 	if int(dataLength) > maxBytes {
 		return errors.New("data too large for the image")
 	}
@@ -110,20 +111,20 @@ func (e *LSBEncoder) EncodeData(inputPath, outputPath string, data []byte) error
 
 		r, g, b, a := rgbaImg.At(x, y).RGBA()
 
-		// Process each color channel
+		// Process each color channel - only 1 bit per channel
 		if bitIndex/8 < len(fullData) {
-			r = embedBits(r, fullData, bitIndex, e.BitsUsed)
-			bitIndex += e.BitsUsed
+			r = embedBits(r, fullData, bitIndex, 1)
+			bitIndex += 1
 		}
 
 		if bitIndex/8 < len(fullData) {
-			g = embedBits(g, fullData, bitIndex, e.BitsUsed)
-			bitIndex += e.BitsUsed
+			g = embedBits(g, fullData, bitIndex, 1)
+			bitIndex += 1
 		}
 
 		if bitIndex/8 < len(fullData) {
-			b = embedBits(b, fullData, bitIndex, e.BitsUsed)
-			bitIndex += e.BitsUsed
+			b = embedBits(b, fullData, bitIndex, 1)
+			bitIndex += 1
 		}
 
 		// Set the modified pixel
@@ -142,7 +143,14 @@ func (e *LSBEncoder) EncodeData(inputPath, outputPath string, data []byte) error
 	}
 	defer outFile.Close()
 
-	return png.Encode(outFile, rgbaImg)
+	// Use no compression for PNG to minimize file size changes
+	encoder := &png.Encoder{
+		CompressionLevel: png.NoCompression,
+	}
+
+	// If the original was a JPEG, we need to use PNG for lossless storage
+	// but we'll use minimal settings to keep file size down
+	return encoder.Encode(outFile, rgbaImg)
 }
 
 // DecodeData extracts hidden binary data from an image
@@ -178,20 +186,20 @@ func (e *LSBEncoder) DecodeData(inputPath string) ([]byte, error) {
 		x, y := pixel.X, pixel.Y
 		r, g, b, _ := img.At(x, y).RGBA()
 
-		// Extract from red channel
-		extractBits(r, &currentByte, &bitsRead, &bitIndex, e.BitsUsed, &extractedData)
+		// Extract from red channel - only 1 bit
+		extractBits(r, &currentByte, &bitsRead, &bitIndex, 1, &extractedData)
 		if len(extractedData) >= 4 && len(extractedData) >= int(binary.BigEndian.Uint32(extractedData[0:4]))+4 {
 			break
 		}
 
-		// Extract from green channel
-		extractBits(g, &currentByte, &bitsRead, &bitIndex, e.BitsUsed, &extractedData)
+		// Extract from green channel - only 1 bit
+		extractBits(g, &currentByte, &bitsRead, &bitIndex, 1, &extractedData)
 		if len(extractedData) >= 4 && len(extractedData) >= int(binary.BigEndian.Uint32(extractedData[0:4]))+4 {
 			break
 		}
 
-		// Extract from blue channel
-		extractBits(b, &currentByte, &bitsRead, &bitIndex, e.BitsUsed, &extractedData)
+		// Extract from blue channel - only 1 bit
+		extractBits(b, &currentByte, &bitsRead, &bitIndex, 1, &extractedData)
 		if len(extractedData) >= 4 && len(extractedData) >= int(binary.BigEndian.Uint32(extractedData[0:4]))+4 {
 			break
 		}

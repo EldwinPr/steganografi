@@ -21,27 +21,65 @@
                 <button class="sub-tab-btn" data-subtab="encode-file">Hide File</button>
             </div>
             
+            <div class="method-tabs">
+                <button class="method-tab-btn active" data-method="lsb">LSB</button>
+                <button class="method-tab-btn" data-method="bpcs">BPCS</button>
+            </div>
+            
             <div class="sub-tab-content active" id="encode-text-tab">
                 <h2>Encode Text Message</h2>
-                <form id="encode-text-form" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="encode-text-image">Select Carrier Image: (PNG or JPG)</label>
-                        <input type="file" id="encode-text-image" name="image" accept="image/*" required>
-                        <div class="image-preview" id="encode-text-preview"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="encode-text-message">Message:</label>
-                        <textarea id="encode-text-message" name="message" rows="4" required></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="encode-text-seed">Seed (optional):</label>
-                        <input type="text" id="encode-text-seed" name="seed" placeholder="Leave empty for default seed (-1)">
-                    </div>
-                    
-                    <button type="submit" class="btn">Encode</button>
-                </form>
+                
+                <!-- LSB Method -->
+                <div class="method-content active" id="encode-text-lsb">
+                    <form id="encode-text-lsb-form" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="encode-text-lsb-image">Select Carrier Image: (PNG or JPG)</label>
+                            <input type="file" id="encode-text-lsb-image" name="image" accept="image/*" required>
+                            <div class="image-preview" id="encode-text-lsb-preview"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="encode-text-lsb-message">Message:</label>
+                            <textarea id="encode-text-lsb-message" name="message" rows="4" required></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="encode-text-lsb-seed">Seed (optional):</label>
+                            <input type="text" id="encode-text-lsb-seed" name="seed" placeholder="Leave empty for default seed (-1)">
+                        </div>
+                        
+                        <button type="submit" class="btn">Encode with LSB</button>
+                    </form>
+                </div>
+                
+                <!-- BPCS Method -->
+                <div class="method-content" id="encode-text-bpcs">
+                    <form id="encode-text-bpcs-form" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="encode-text-bpcs-image">Select Carrier Image: (PNG or JPG)</label>
+                            <input type="file" id="encode-text-bpcs-image" name="image" accept="image/*" required>
+                            <div class="image-preview" id="encode-text-bpcs-preview"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="encode-text-bpcs-message">Message:</label>
+                            <textarea id="encode-text-bpcs-message" name="message" rows="4" required></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="encode-text-bpcs-seed">Seed (optional):</label>
+                            <input type="text" id="encode-text-bpcs-seed" name="seed" placeholder="Leave empty for default seed (-1)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="encode-text-bpcs-complexity">Complexity Threshold (0.3-0.5):</label>
+                            <input type="number" id="encode-text-bpcs-complexity" name="complexityThreshold" min="0.3" max="0.5" step="0.01" value="0.45">
+                            <small>Higher values = less capacity but better quality</small>
+                        </div>
+                        
+                        <button type="submit" class="btn">Encode with BPCS</button>
+                    </form>
+                </div>
                 
                 <div class="result" id="encode-text-result">
                     <h3>Result:</h3>
@@ -53,26 +91,60 @@
             
             <div class="sub-tab-content" id="encode-file-tab">
                 <h2>Hide File in Image</h2>
-                <form id="encode-file-form" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="encode-file-image">Select Carrier Image: (PNG or JPG)</label>
-                        <input type="file" id="encode-file-image" name="image" accept="image/*" required>
-                        <div class="image-preview" id="encode-file-image-preview"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="encode-file-file">Select File to Hide:</label>
-                        <input type="file" id="encode-file-file" name="file" required>
-                        <div class="file-info" id="encode-file-info"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="encode-file-seed">Seed (optional):</label>
-                        <input type="text" id="encode-file-seed" name="seed" placeholder="Leave empty for default seed (-1)">
-                    </div>
-                    
-                    <button type="submit" class="btn">Encode</button>
-                </form>
+                
+                <!-- LSB Method -->
+                <div class="method-content active" id="encode-file-lsb">
+                    <form id="encode-file-lsb-form" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="encode-file-lsb-image">Select Carrier Image: (PNG or JPG)</label>
+                            <input type="file" id="encode-file-lsb-image" name="image" accept="image/*" required>
+                            <div class="image-preview" id="encode-file-lsb-image-preview"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="encode-file-lsb-file">Select File to Hide:</label>
+                            <input type="file" id="encode-file-lsb-file" name="file" required>
+                            <div class="file-info" id="encode-file-lsb-info"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="encode-file-lsb-seed">Seed (optional):</label>
+                            <input type="text" id="encode-file-lsb-seed" name="seed" placeholder="Leave empty for default seed (-1)">
+                        </div>
+                        
+                        <button type="submit" class="btn">Encode with LSB</button>
+                    </form>
+                </div>
+                
+                <!-- BPCS Method -->
+                <div class="method-content" id="encode-file-bpcs">
+                    <form id="encode-file-bpcs-form" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="encode-file-bpcs-image">Select Carrier Image: (PNG or JPG)</label>
+                            <input type="file" id="encode-file-bpcs-image" name="image" accept="image/*" required>
+                            <div class="image-preview" id="encode-file-bpcs-image-preview"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="encode-file-bpcs-file">Select File to Hide:</label>
+                            <input type="file" id="encode-file-bpcs-file" name="file" required>
+                            <div class="file-info" id="encode-file-bpcs-info"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="encode-file-bpcs-seed">Seed (optional):</label>
+                            <input type="text" id="encode-file-bpcs-seed" name="seed" placeholder="Leave empty for default seed (-1)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="encode-file-bpcs-complexity">Complexity Threshold (0.3-0.5):</label>
+                            <input type="number" id="encode-file-bpcs-complexity" name="complexityThreshold" min="0.3" max="0.5" step="0.01" value="0.45">
+                            <small>Higher values = less capacity but better quality</small>
+                        </div>
+                        
+                        <button type="submit" class="btn">Encode with BPCS</button>
+                    </form>
+                </div>
                 
                 <div class="result" id="encode-file-result">
                     <h3>Result:</h3>
@@ -89,22 +161,55 @@
                 <button class="sub-tab-btn" data-subtab="decode-file">Extract File</button>
             </div>
             
+            <div class="method-tabs">
+                <button class="method-tab-btn active" data-method="lsb">LSB</button>
+                <button class="method-tab-btn" data-method="bpcs">BPCS</button>
+            </div>
+            
             <div class="sub-tab-content active" id="decode-text-tab">
                 <h2>Decode Text Message</h2>
-                <form id="decode-text-form" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="decode-text-image">Select Image:</label>
-                        <input type="file" id="decode-text-image" name="image" accept="image/*" required>
-                        <div class="image-preview" id="decode-text-preview"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="decode-text-seed">Seed:</label>
-                        <input type="text" id="decode-text-seed" name="seed" placeholder="Enter the same seed used for encoding (default: -1)">
-                    </div>
-                    
-                    <button type="submit" class="btn">Decode</button>
-                </form>
+                
+                <!-- LSB Method -->
+                <div class="method-content active" id="decode-text-lsb">
+                    <form id="decode-text-lsb-form" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="decode-text-lsb-image">Select Image:</label>
+                            <input type="file" id="decode-text-lsb-image" name="image" accept="image/*" required>
+                            <div class="image-preview" id="decode-text-lsb-preview"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="decode-text-lsb-seed">Seed:</label>
+                            <input type="text" id="decode-text-lsb-seed" name="seed" placeholder="Enter the same seed used for encoding (default: -1)">
+                        </div>
+                        
+                        <button type="submit" class="btn">Decode with LSB</button>
+                    </form>
+                </div>
+                
+                <!-- BPCS Method -->
+                <div class="method-content" id="decode-text-bpcs">
+                    <form id="decode-text-bpcs-form" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="decode-text-bpcs-image">Select Image:</label>
+                            <input type="file" id="decode-text-bpcs-image" name="image" accept="image/*" required>
+                            <div class="image-preview" id="decode-text-bpcs-preview"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="decode-text-bpcs-seed">Seed:</label>
+                            <input type="text" id="decode-text-bpcs-seed" name="seed" placeholder="Enter the same seed used for encoding (default: -1)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="decode-text-bpcs-complexity">Complexity Threshold (0.3-0.5):</label>
+                            <input type="number" id="decode-text-bpcs-complexity" name="complexityThreshold" min="0.3" max="0.5" step="0.01" value="0.45">
+                            <small>Must match the value used for encoding</small>
+                        </div>
+                        
+                        <button type="submit" class="btn">Decode with BPCS</button>
+                    </form>
+                </div>
                 
                 <div class="result" id="decode-text-result">
                     <h3>Result:</h3>
@@ -116,20 +221,48 @@
             
             <div class="sub-tab-content" id="decode-file-tab">
                 <h2>Extract Hidden File</h2>
-                <form id="decode-file-form" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="decode-file-image">Select Image:</label>
-                        <input type="file" id="decode-file-image" name="image" accept="image/*" required>
-                        <div class="image-preview" id="decode-file-preview"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="decode-file-seed">Seed:</label>
-                        <input type="text" id="decode-file-seed" name="seed" placeholder="Enter the same seed used for encoding (default: -1)">
-                    </div>
-                    
-                    <button type="submit" class="btn">Decode</button>
-                </form>
+                
+                <!-- LSB Method -->
+                <div class="method-content active" id="decode-file-lsb">
+                    <form id="decode-file-lsb-form" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="decode-file-lsb-image">Select Image:</label>
+                            <input type="file" id="decode-file-lsb-image" name="image" accept="image/*" required>
+                            <div class="image-preview" id="decode-file-lsb-preview"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="decode-file-lsb-seed">Seed:</label>
+                            <input type="text" id="decode-file-lsb-seed" name="seed" placeholder="Enter the same seed used for encoding (default: -1)">
+                        </div>
+                        
+                        <button type="submit" class="btn">Decode with LSB</button>
+                    </form>
+                </div>
+                
+                <!-- BPCS Method -->
+                <div class="method-content" id="decode-file-bpcs">
+                    <form id="decode-file-bpcs-form" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="decode-file-bpcs-image">Select Image:</label>
+                            <input type="file" id="decode-file-bpcs-image" name="image" accept="image/*" required>
+                            <div class="image-preview" id="decode-file-bpcs-preview"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="decode-file-bpcs-seed">Seed:</label>
+                            <input type="text" id="decode-file-bpcs-seed" name="seed" placeholder="Enter the same seed used for encoding (default: -1)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="decode-file-bpcs-complexity">Complexity Threshold (0.3-0.5):</label>
+                            <input type="number" id="decode-file-bpcs-complexity" name="complexityThreshold" min="0.3" max="0.5" step="0.01" value="0.45">
+                            <small>Must match the value used for encoding</small>
+                        </div>
+                        
+                        <button type="submit" class="btn">Decode with BPCS</button>
+                    </form>
+                </div>
                 
                 <div class="result" id="decode-file-result">
                     <h3>Result:</h3>

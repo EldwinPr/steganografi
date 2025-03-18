@@ -212,3 +212,35 @@ textarea {
     width: 100%;
     margin-top: 10px;
 }
+
+
+.method-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.method-tab-btn {
+    padding: 8px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #777;
+    transition: all 0.3s ease;
+}
+
+.method-tab-btn.active {
+    color: #3498db;
+    border-bottom: 2px solid #3498db;
+}
+
+.method-content {
+    display: none;
+    padding: 10px 0;
+}
+
+.method-content.active {
+    display: block;
+}

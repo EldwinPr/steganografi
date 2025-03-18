@@ -21,11 +21,17 @@ func main() {
 	fs := http.FileServer(http.Dir(filepath.Join(cwd, "web", "static")))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
-	// Set up API routes
-	http.HandleFunc("/api/encode/text", api.HandleEncodeText)
-	http.HandleFunc("/api/encode/file", api.HandleEncodeFile)
-	http.HandleFunc("/api/decode/text", api.HandleDecodeText)
-	http.HandleFunc("/api/decode/file", api.HandleDecodeFile)
+	// Set up LSB API routes
+	http.HandleFunc("/api/lsb/encode/text", api.HandleEncodeText)
+	http.HandleFunc("/api/lsb/encode/file", api.HandleEncodeFile)
+	http.HandleFunc("/api/lsb/decode/text", api.HandleDecodeText)
+	http.HandleFunc("/api/lsb/decode/file", api.HandleDecodeFile)
+
+	// Set up BPCS API routes
+	http.HandleFunc("/api/bpcs/encode/text", api.HandleBPCSEncodeText)
+	http.HandleFunc("/api/bpcs/encode/file", api.HandleBPCSEncodeFile)
+	http.HandleFunc("/api/bpcs/decode/text", api.HandleBPCSDecodeText)
+	http.HandleFunc("/api/bpcs/decode/file", api.HandleBPCSDecodeFile)
 
 	// Serve the main HTML page
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

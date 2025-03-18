@@ -18,7 +18,6 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // Sub-tab switching
     const subTabButtons = document.querySelectorAll(".sub-tab-btn");
-    const subTabContents = document.querySelectorAll(".sub-tab-content");
     
     subTabButtons.forEach(button => {
         button.addEventListener("click", () => {
@@ -33,42 +32,56 @@ document.addEventListener("DOMContentLoaded", function() {
             button.classList.add("active");
             const subTabId = button.getAttribute("data-subtab");
             document.getElementById(`${subTabId}-tab`).classList.add("active");
+            
+            // Make sure the correct method content is shown
+            updateActiveMethodContent(parentTab);
+        });
+    });
+
+    // Method tab switching
+    const methodTabButtons = document.querySelectorAll(".method-tab-btn");
+    
+    methodTabButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            // Find the closest tabs container
+            const tabsContainer = button.closest(".tabs, .method-tabs");
+            // Find all method buttons in this container and remove active class
+            tabsContainer.querySelectorAll(".method-tab-btn").forEach(btn => 
+                btn.classList.remove("active"));
+            // Add active class to clicked button
+            button.classList.add("active");
+            
+            // Find parent tab content
+            const parentTab = button.closest(".tab-content");
+            updateActiveMethodContent(parentTab);
         });
     });
     
-    // Image previews
-    setupImagePreview("encode-text-image", "encode-text-preview");
-    setupImagePreview("encode-file-image", "encode-file-image-preview");
-    setupImagePreview("decode-text-image", "decode-text-preview");
-    setupImagePreview("decode-file-image", "decode-file-preview");
-    
-    // File info display
-    const fileInput = document.getElementById("encode-file-file");
-    const fileInfo = document.getElementById("encode-file-info");
-    
-    if (fileInput) {
-        fileInput.addEventListener("change", function() {
-            if (this.files && this.files[0]) {
-                const file = this.files[0];
-                const fileSize = formatFileSize(file.size);
-                fileInfo.innerHTML = `
-                    <strong>File:</strong> ${file.name}<br>
-                    <strong>Type:</strong> ${file.type || "Unknown"}<br>
-                    <strong>Size:</strong> ${fileSize}
-                `;
-            } else {
-                fileInfo.innerHTML = "No file selected";
-            }
-        });
+    function updateActiveMethodContent(parentTab) {
+        // Find active sub-tab content
+        const activeSubTab = parentTab.querySelector(".sub-tab-content.active");
+        if (!activeSubTab) return;
+        
+        // Get active method
+        const activeMethod = parentTab.querySelector(".method-tab-btn.active")?.getAttribute("data-method");
+        if (!activeMethod) return;
+        
+        // Get sub-tab ID
+        const subTabId = activeSubTab.id.replace("-tab", "");
+        
+        // Hide all method contents in this sub-tab
+        activeSubTab.querySelectorAll(".method-content").forEach(content => 
+            content.classList.remove("active"));
+        
+        // Show the correct method content
+        const methodContentId = `${subTabId}-${activeMethod}`;
+        const methodContent = document.getElementById(methodContentId);
+        if (methodContent) {
+            methodContent.classList.add("active");
+        }
     }
     
-    // Form submissions
-    setupFormSubmission("encode-text-form", "/api/encode/text", handleEncodeTextResponse);
-    setupFormSubmission("encode-file-form", "/api/encode/file", handleEncodeFileResponse);
-    setupFormSubmission("decode-text-form", "/api/decode/text", handleDecodeTextResponse);
-    setupFormSubmission("decode-file-form", "/api/decode/file", handleDecodeFileResponse);
-    
-    // Helper functions
+    // Setup image previews
     function setupImagePreview(inputId, previewId) {
         const input = document.getElementById(inputId);
         const preview = document.getElementById(previewId);
@@ -89,7 +102,44 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
     }
+
+    // Setup all image previews
+    setupImagePreview("encode-text-lsb-image", "encode-text-lsb-preview");
+    setupImagePreview("encode-text-bpcs-image", "encode-text-bpcs-preview");
+    setupImagePreview("encode-file-lsb-image", "encode-file-lsb-image-preview");
+    setupImagePreview("encode-file-bpcs-image", "encode-file-bpcs-image-preview");
+    setupImagePreview("decode-text-lsb-image", "decode-text-lsb-preview");
+    setupImagePreview("decode-text-bpcs-image", "decode-text-bpcs-preview");
+    setupImagePreview("decode-file-lsb-image", "decode-file-lsb-preview");
+    setupImagePreview("decode-file-bpcs-image", "decode-file-bpcs-preview");
     
+    // Helper function for file info display
+    function setupFileInfo(inputId, infoId) {
+        const fileInput = document.getElementById(inputId);
+        const fileInfo = document.getElementById(infoId);
+        
+        if (fileInput && fileInfo) {
+            fileInput.addEventListener("change", function() {
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    const fileSize = formatFileSize(file.size);
+                    fileInfo.innerHTML = `
+                        <strong>File:</strong> ${file.name}<br>
+                        <strong>Type:</strong> ${file.type || "Unknown"}<br>
+                        <strong>Size:</strong> ${fileSize}
+                    `;
+                } else {
+                    fileInfo.innerHTML = "No file selected";
+                }
+            });
+        }
+    }
+    
+    // Setup file info displays
+    setupFileInfo("encode-file-lsb-file", "encode-file-lsb-info");
+    setupFileInfo("encode-file-bpcs-file", "encode-file-bpcs-info");
+    
+    // Form submission setup
     function setupFormSubmission(formId, endpoint, responseHandler) {
         const form = document.getElementById(formId);
         
@@ -98,8 +148,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 e.preventDefault();
                 const formData = new FormData(this);
                 
+                // Find the parent tab and sub-tab to determine the correct result element
+                const parentTab = form.closest(".tab-content");
+                const subTab = form.closest(".sub-tab-content");
+                
                 // Get the result element
-                const resultId = formId.replace("form", "result");
+                const resultId = subTab.id.replace("-tab", "-result");
                 const resultContent = document.querySelector(`#${resultId} .result-content`);
                 
                 // Show loading state
@@ -125,11 +179,26 @@ document.addEventListener("DOMContentLoaded", function() {
                 .then(data => responseHandler(data, resultContent))
                 .catch(error => {
                     resultContent.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                    console.error("Form submission error:", error);
                 });
             });
+        } else {
+            console.warn(`Form with ID ${formId} not found`);
         }
     }
     
+    // Setup form submissions for LSB and BPCS methods
+    setupFormSubmission("encode-text-lsb-form", "/api/lsb/encode/text", handleEncodeTextResponse);
+    setupFormSubmission("encode-file-lsb-form", "/api/lsb/encode/file", handleEncodeFileResponse);
+    setupFormSubmission("decode-text-lsb-form", "/api/lsb/decode/text", handleDecodeTextResponse);
+    setupFormSubmission("decode-file-lsb-form", "/api/lsb/decode/file", handleDecodeFileResponse);
+    
+    setupFormSubmission("encode-text-bpcs-form", "/api/bpcs/encode/text", handleEncodeTextResponse);
+    setupFormSubmission("encode-file-bpcs-form", "/api/bpcs/encode/file", handleEncodeFileResponse);
+    setupFormSubmission("decode-text-bpcs-form", "/api/bpcs/decode/text", handleDecodeTextResponse);
+    setupFormSubmission("decode-file-bpcs-form", "/api/bpcs/decode/file", handleDecodeFileResponse);
+    
+    // Response handlers
     function handleEncodeTextResponse(blob, resultContent) {
         // Create download link for the encoded image
         const url = URL.createObjectURL(blob);
@@ -259,4 +328,7 @@ document.addEventListener("DOMContentLoaded", function() {
         
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
+    
+    // Initialize the correct method content for each tab
+    document.querySelectorAll(".tab-content").forEach(updateActiveMethodContent);
 });

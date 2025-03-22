@@ -1,105 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Steganography Tool</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Steganography Tool</title>
+  <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Steganography Tool</h1>
+  <div class="container">
+      <h1>Steganography Tool</h1>
 
-        <div class="method-cards">
-            <a href="/" class="method-card">
-                <div class="method-icon">🖼️</div>
-                <h3>Image Steganography</h3>
-            </a>
-            <a href="/audio" class="method-card">
-                <div class="method-icon">🔊</div>
-                <h3>Audio Steganography</h3>
-            </a>
-            <a href="/video" class="method-card active">
-                <div class="method-icon">🎬</div>
-                <h3>Video Steganography</h3>
-            </a>
-        </div>                       
-        
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="encode">Encode</button>
-            <button class="tab-btn" data-tab="decode">Decode</button>
-        </div>
-        
-        <div class="tab-content active" id="encode-tab">
-            <div class="sub-tabs">
-                <button class="sub-tab-btn active" data-subtab="encode-text">Text Message</button>
-            </div>
-            
-            <div class="sub-tab-content active" id="encode-text-tab">
-                <h2>Encode Text Message in Video</h2>
-                
-                <form id="encode-text-form" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="encode-text-video">Select Carrier Video: (AVI format only)</label>
-                        <input type="file" id="encode-text-video" name="video" accept=".avi" required>
-                        <div class="video-preview" id="encode-text-preview"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="encode-text-message">Message:</label>
-                        <textarea id="encode-text-message" name="message" rows="4" required></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="encode-text-seed">Seed (optional):</label>
-                        <input type="text" id="encode-text-seed" name="seed" placeholder="Leave empty for default seed (-1)">
-                    </div>
-                    
-                    <button type="submit" class="btn">Encode Message</button>
-                </form>
-                
-                <div class="result" id="encode-text-result">
-                    <h3>Result:</h3>
-                    <div class="result-content">
-                        <p>Your encoded video will appear here.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="tab-content" id="decode-tab">
-            <div class="sub-tabs">
-                <button class="sub-tab-btn active" data-subtab="decode-text">Text Message</button>
-            </div>
-            
-            <div class="sub-tab-content active" id="decode-text-tab">
-                <h2>Decode Text Message from Video</h2>
-                
-                <form id="decode-text-form" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="decode-text-video">Select Video with Hidden Message: (AVI format only)</label>
-                        <input type="file" id="decode-text-video" name="video" accept=".avi" required>
-                        <div class="video-preview" id="decode-text-preview"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="decode-text-seed">Seed (if used during encoding):</label>
-                        <input type="text" id="decode-text-seed" name="seed" placeholder="Leave empty for default seed (-1)">
-                    </div>
-                    
-                    <button type="submit" class="btn">Decode Message</button>
-                </form>
-                
-                <div class="result" id="decode-text-result">
-                    <h3>Result:</h3>
-                    <div class="result-content">
-                        <p>The hidden message will appear here.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <script src="/static/js/video.js"></script>
+      <div class="method-cards">
+          <a href="/" class="method-card">
+              <div class="method-icon">🖼️</div>
+              <h3>Image Steganography</h3>
+          </a>
+          <a href="/audio" class="method-card">
+              <div class="method-icon">🔊</div>
+              <h3>Audio Steganography</h3>
+          </a>
+          <a href="/video" class="method-card active">
+              <div class="method-icon">🎬</div>
+              <h3>Video Steganography</h3>
+          </a>
+      </div>                       
+      
+      <div class="tabs">
+          <button class="tab-btn active" data-tab="encode">Encode</button>
+          <button class="tab-btn" data-tab="decode">Decode</button>
+      </div>
+      
+      <div class="tab-content active" id="encode-tab">
+          <div class="sub-tabs">
+              <button class="sub-tab-btn active" data-subtab="encode-text">Text Message</button>
+          </div>
+          
+          <div class="sub-tab-content active" id="encode-text-tab">
+              <h2>Encode Text Message in Video</h2>
+              
+              <form id="encode-text-form" enctype="multipart/form-data">
+                  <div class="form-group">
+                      <label for="encode-text-video">Select Carrier Video: (AVI format only)</label>
+                      <input type="file" id="encode-text-video" name="video" accept=".avi" required>
+                  </div>
+                  
+                  <div class="form-group">
+                      <label for="encode-text-message">Message:</label>
+                      <textarea id="encode-text-message" name="message" rows="4" required></textarea>
+                  </div>
+                  
+                  <div class="form-group">
+                      <label for="encode-text-seed">Seed (optional):</label>
+                      <input type="text" id="encode-text-seed" name="seed" placeholder="Leave empty for default seed (-1)">
+                  </div>
+                  
+                  <button type="submit" class="btn">Encode Message</button>
+              </form>
+              
+              <div class="result" id="encode-text-result">
+                  <h3>Result:</h3>
+                  <div class="result-content">
+                      <p>Your encoded video will appear here.</p>
+                  </div>
+              </div>
+          </div>
+      </div>
+      
+      <div class="tab-content" id="decode-tab">
+          <div class="sub-tabs">
+              <button class="sub-tab-btn active" data-subtab="decode-text">Text Message</button>
+          </div>
+          
+          <div class="sub-tab-content active" id="decode-text-tab">
+              <h2>Decode Text Message from Video</h2>
+              
+              <form id="decode-text-form" enctype="multipart/form-data">
+                  <div class="form-group">
+                      <label for="decode-text-video">Select Video with Hidden Message: (AVI format only)</label>
+                      <input type="file" id="decode-text-video" name="video" accept=".avi" required>
+                  </div>
+                  
+                  <div class="form-group">
+                      <label for="decode-text-seed">Seed (if used during encoding):</label>
+                      <input type="text" id="decode-text-seed" name="seed" placeholder="Leave empty for default seed (-1)">
+                  </div>
+                  
+                  <button type="submit" class="btn">Decode Message</button>
+              </form>
+              
+              <div class="result" id="decode-text-result">
+                  <h3>Result:</h3>
+                  <div class="result-content">
+                      <p>The hidden message will appear here.</p>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+  
+  <script src="/static/js/video.js"></script>
 </body>
 </html>

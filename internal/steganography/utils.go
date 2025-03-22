@@ -36,7 +36,7 @@ func EncryptData(data []byte, password string) ([]byte, error) {
 }
 
 // DecryptData decrypts data using AES-GCM with the provided password
-func DecryptData(data []byte, password string) ([]byte, error) {
+func DecryptData(encryptedData []byte, password string) ([]byte, error) {
 	// Create a new AES cipher using the password
 	key := sha256.Sum256([]byte(password))
 	block, err := aes.NewCipher(key[:])
@@ -50,13 +50,14 @@ func DecryptData(data []byte, password string) ([]byte, error) {
 		return nil, err
 	}
 
-	// Check if the data is long enough
-	if len(data) < gcm.NonceSize() {
-		return nil, errors.New("ciphertext too short")
+	// Verify data length
+	if len(encryptedData) < gcm.NonceSize() {
+		return nil, errors.New("encrypted data is too short")
 	}
 
-	// Extract the nonce and ciphertext
-	nonce, ciphertext := data[:gcm.NonceSize()], data[gcm.NonceSize():]
+	// Extract nonce and ciphertext
+	nonce := encryptedData[:gcm.NonceSize()]
+	ciphertext := encryptedData[gcm.NonceSize():]
 
 	// Decrypt the data
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)

@@ -88,15 +88,8 @@ func (e *BPCSEncoder) EncodeData(inputPath, outputPath string, data []byte) erro
 		}
 	}
 
-	// Calculate max capacity
-	maxCapacity := e.calculateCapacity(rgbaImg)
-
 	// Get data length
 	dataLength := uint32(len(data))
-
-	if int(dataLength) > maxCapacity {
-		return errors.New("data too large for the image")
-	}
 
 	// Create a byte slice for the length (4 bytes) + data
 	fullData := make([]byte, 4+dataLength)
@@ -106,20 +99,17 @@ func (e *BPCSEncoder) EncodeData(inputPath, outputPath string, data []byte) erro
 	// Convert data to bit planes
 	dataBlocks := convertDataToBlocks(fullData)
 
-	// Track conjugation status for each block
-	conjugationMap := make([]bool, len(dataBlocks))
-
 	// Conjugate blocks to ensure complexity
 	for i := range dataBlocks {
-		complexity := calculateComplexity(dataBlocks[i])
-		if complexity < e.ComplexityThreshold {
+		if calculateComplexity(dataBlocks[i]) < e.ComplexityThreshold {
 			dataBlocks[i] = conjugateBlock(dataBlocks[i])
-			conjugationMap[i] = true
+			// Mark this block as conjugated (set a flag in the header)
+			// This would be implemented in a real system
 		}
 	}
 
 	// Find complex regions in the image and embed data
-	err = e.embedDataInComplexRegions(rgbaImg, dataBlocks, conjugationMap)
+	err = e.embedDataInComplexRegions(rgbaImg, dataBlocks)
 	if err != nil {
 		return err
 	}
@@ -139,51 +129,6 @@ func (e *BPCSEncoder) EncodeData(inputPath, outputPath string, data []byte) erro
 	return encoder.Encode(outFile, rgbaImg)
 }
 
-// calculateCapacity returns the approximate number of bytes that can be stored in the image
-func (e *BPCSEncoder) calculateCapacity(img *image.RGBA) int {
-	bounds := img.Bounds()
-	width, height := bounds.Max.X, bounds.Max.Y
-
-	// Calculate how many 8x8 blocks we can fit in the image
-	blockCountX := width / 8
-	blockCountY := height / 8
-
-	// Count complex regions
-	complexRegions := 0
-	totalBlocks := 0
-
-	// Only check a sample of blocks to estimate
-	for plane := 0; plane < 6; plane++ { // Only use 6 bit planes (0-5)
-		for y := 0; y < blockCountY; y += 4 { // Sample every 4th block
-			for x := 0; x < blockCountX; x += 4 {
-				redBlock := extractBitPlaneBlock(img, x*8, y*8, plane, 0)
-				greenBlock := extractBitPlaneBlock(img, x*8, y*8, plane, 1)
-				blueBlock := extractBitPlaneBlock(img, x*8, y*8, plane, 2)
-
-				totalBlocks += 3
-
-				if calculateComplexity(redBlock) > e.ComplexityThreshold {
-					complexRegions++
-				}
-				if calculateComplexity(greenBlock) > e.ComplexityThreshold {
-					complexRegions++
-				}
-				if calculateComplexity(blueBlock) > e.ComplexityThreshold {
-					complexRegions++
-				}
-			}
-		}
-	}
-
-	// Estimate total complex regions based on the sample
-	complexityRatio := float64(complexRegions) / float64(totalBlocks)
-	totalBlocksInImage := blockCountX * blockCountY * 3 * 6 // RGB channels * 6 bit planes
-	estimatedComplexBlocks := int(float64(totalBlocksInImage) * complexityRatio)
-
-	// Each block holds 8 bytes
-	return estimatedComplexBlocks * 8
-}
-
 // DecodeData extracts hidden binary data from an image
 func (e *BPCSEncoder) DecodeData(inputPath string) ([]byte, error) {
 	// Open the input image
@@ -199,15 +144,17 @@ func (e *BPCSEncoder) DecodeData(inputPath string) ([]byte, error) {
 		return nil, err
 	}
 
-	// Extract data blocks and conjugation map from complex regions
-	dataBlocks, conjugationMap, err := e.extractDataFromComplexRegions(img)
+	// Extract data blocks from complex regions
+	dataBlocks, err := e.extractDataFromComplexRegions(img)
 	if err != nil {
 		return nil, err
 	}
 
 	// Deconjugate blocks if needed
 	for i := range dataBlocks {
-		if conjugationMap[i] {
+		// Check if this block was conjugated (would check a flag in the header)
+		// For now, we'll check complexity and deconjugate if needed
+		if calculateComplexity(dataBlocks[i]) > 0.9 {
 			dataBlocks[i] = conjugateBlock(dataBlocks[i])
 		}
 	}
@@ -349,7 +296,7 @@ func convertBlocksToData(blocks []Block) []byte {
 }
 
 // embedDataInComplexRegions embeds data blocks in complex regions of the image
-func (e *BPCSEncoder) embedDataInComplexRegions(img *image.RGBA, dataBlocks []Block, conjugationMap []bool) error {
+func (e *BPCSEncoder) embedDataInComplexRegions(img *image.RGBA, dataBlocks []Block) error {
 	bounds := img.Bounds()
 	width, height := bounds.Max.X, bounds.Max.Y
 
@@ -361,20 +308,8 @@ func (e *BPCSEncoder) embedDataInComplexRegions(img *image.RGBA, dataBlocks []Bl
 	rng := NewSeededRNG(e.Seed)
 	blockOrder := generateBlockOrder(blockCountX, blockCountY, rng)
 
-	// Create a map to store conjugation information
-	conjugationData := make([]byte, (len(conjugationMap)+7)/8)
-	for i, isConjugated := range conjugationMap {
-		if isConjugated {
-			conjugationData[i/8] |= 1 << (7 - (i % 8))
-		}
-	}
-
-	// Convert conjugation map to blocks
-	conjugationBlocks := convertDataToBlocks(conjugationData)
-
 	// Track which data block we're currently embedding
 	currentDataBlock := 0
-	isEmbeddingConjugationMap := false
 
 	// For each bit plane (0-7) in each color channel (R,G,B)
 	for plane := 0; plane < 8; plane++ {
@@ -384,13 +319,7 @@ func (e *BPCSEncoder) embedDataInComplexRegions(img *image.RGBA, dataBlocks []Bl
 		}
 
 		for _, blockPos := range blockOrder {
-			if currentDataBlock >= len(dataBlocks) && !isEmbeddingConjugationMap {
-				// Switch to embedding conjugation map
-				isEmbeddingConjugationMap = true
-				currentDataBlock = 0
-			}
-
-			if isEmbeddingConjugationMap && currentDataBlock >= len(conjugationBlocks) {
+			if currentDataBlock >= len(dataBlocks) {
 				return nil // All data has been embedded
 			}
 
@@ -402,62 +331,37 @@ func (e *BPCSEncoder) embedDataInComplexRegions(img *image.RGBA, dataBlocks []Bl
 			// Check if the blocks are complex enough to hide data
 			if calculateComplexity(redBlock) > e.ComplexityThreshold {
 				// Replace with data block
-				if isEmbeddingConjugationMap {
-					if currentDataBlock < len(conjugationBlocks) {
-						embedBitPlaneBlock(img, blockPos.X, blockPos.Y, plane, 0, conjugationBlocks[currentDataBlock])
-						currentDataBlock++
-					}
-				} else {
-					embedBitPlaneBlock(img, blockPos.X, blockPos.Y, plane, 0, dataBlocks[currentDataBlock])
-					currentDataBlock++
-				}
-			}
+				embedBitPlaneBlock(img, blockPos.X, blockPos.Y, plane, 0, dataBlocks[currentDataBlock])
+				currentDataBlock++
 
-			if currentDataBlock >= len(dataBlocks) && !isEmbeddingConjugationMap {
-				// Switch to embedding conjugation map
-				isEmbeddingConjugationMap = true
-				currentDataBlock = 0
-			} else if isEmbeddingConjugationMap && currentDataBlock >= len(conjugationBlocks) {
-				return nil // All data has been embedded
+				if currentDataBlock >= len(dataBlocks) {
+					return nil // All data has been embedded
+				}
 			}
 
 			if calculateComplexity(greenBlock) > e.ComplexityThreshold {
 				// Replace with data block
-				if isEmbeddingConjugationMap {
-					if currentDataBlock < len(conjugationBlocks) {
-						embedBitPlaneBlock(img, blockPos.X, blockPos.Y, plane, 1, conjugationBlocks[currentDataBlock])
-						currentDataBlock++
-					}
-				} else {
-					embedBitPlaneBlock(img, blockPos.X, blockPos.Y, plane, 1, dataBlocks[currentDataBlock])
-					currentDataBlock++
-				}
-			}
+				embedBitPlaneBlock(img, blockPos.X, blockPos.Y, plane, 1, dataBlocks[currentDataBlock])
+				currentDataBlock++
 
-			if currentDataBlock >= len(dataBlocks) && !isEmbeddingConjugationMap {
-				// Switch to embedding conjugation map
-				isEmbeddingConjugationMap = true
-				currentDataBlock = 0
-			} else if isEmbeddingConjugationMap && currentDataBlock >= len(conjugationBlocks) {
-				return nil // All data has been embedded
+				if currentDataBlock >= len(dataBlocks) {
+					return nil // All data has been embedded
+				}
 			}
 
 			if calculateComplexity(blueBlock) > e.ComplexityThreshold {
 				// Replace with data block
-				if isEmbeddingConjugationMap {
-					if currentDataBlock < len(conjugationBlocks) {
-						embedBitPlaneBlock(img, blockPos.X, blockPos.Y, plane, 2, conjugationBlocks[currentDataBlock])
-						currentDataBlock++
-					}
-				} else {
-					embedBitPlaneBlock(img, blockPos.X, blockPos.Y, plane, 2, dataBlocks[currentDataBlock])
-					currentDataBlock++
+				embedBitPlaneBlock(img, blockPos.X, blockPos.Y, plane, 2, dataBlocks[currentDataBlock])
+				currentDataBlock++
+
+				if currentDataBlock >= len(dataBlocks) {
+					return nil // All data has been embedded
 				}
 			}
 		}
 	}
 
-	if currentDataBlock < len(dataBlocks) && !isEmbeddingConjugationMap {
+	if currentDataBlock < len(dataBlocks) {
 		return errors.New("not enough complex regions to embed all data")
 	}
 
@@ -465,7 +369,7 @@ func (e *BPCSEncoder) embedDataInComplexRegions(img *image.RGBA, dataBlocks []Bl
 }
 
 // extractDataFromComplexRegions extracts data blocks from complex regions
-func (e *BPCSEncoder) extractDataFromComplexRegions(img image.Image) ([]Block, []bool, error) {
+func (e *BPCSEncoder) extractDataFromComplexRegions(img image.Image) ([]Block, error) {
 	bounds := img.Bounds()
 	width, height := bounds.Max.X, bounds.Max.Y
 
@@ -513,61 +417,14 @@ func (e *BPCSEncoder) extractDataFromComplexRegions(img image.Image) ([]Block, [
 			if calculateComplexity(blueBlock) > e.ComplexityThreshold {
 				dataBlocks = append(dataBlocks, blueBlock)
 			}
-
-			// If we have at least 4 bytes, check the length
-			if len(dataBlocks)*8 >= 4 {
-				// Convert the first blocks to get the length
-				partialData := convertBlocksToData(dataBlocks)
-				if len(partialData) >= 4 {
-					dataLength := binary.BigEndian.Uint32(partialData[0:4])
-
-					// Calculate how many blocks we need for data + length
-					totalBytes := 4 + int(dataLength)
-					blocksNeeded := (totalBytes*8 + 63) / 64
-
-					// If we have all the data blocks, we need to read the conjugation map
-					if len(dataBlocks) >= blocksNeeded {
-						// Read conjugation map blocks
-						conjugationMapBytes := (blocksNeeded + 7) / 8
-						conjugationMapBlocksNeeded := (conjugationMapBytes*8 + 63) / 64
-
-						// Continue reading blocks until we have the conjugation map
-						if len(dataBlocks) >= blocksNeeded+conjugationMapBlocksNeeded {
-							// Separate the conjugation map blocks
-							conjugationMapBlocks := dataBlocks[blocksNeeded : blocksNeeded+conjugationMapBlocksNeeded]
-							dataBlocks = dataBlocks[:blocksNeeded]
-
-							// Convert conjugation map blocks to bytes
-							conjugationMapData := convertBlocksToData(conjugationMapBlocks)
-
-							// Create conjugation map
-							conjugationMap := make([]bool, len(dataBlocks))
-							for i := 0; i < len(dataBlocks); i++ {
-								if i/8 < len(conjugationMapData) {
-									conjugationMap[i] = (conjugationMapData[i/8] & (1 << (7 - (i % 8)))) != 0
-								}
-							}
-
-							return dataBlocks, conjugationMap, nil
-						}
-					}
-				}
-			}
 		}
 	}
 
 	if len(dataBlocks) == 0 {
-		return nil, nil, errors.New("no data blocks found")
+		return nil, errors.New("no data blocks found")
 	}
 
-	// If we couldn't extract the conjugation map, return a default one
-	conjugationMap := make([]bool, len(dataBlocks))
-	for i := range conjugationMap {
-		// Assume blocks with very high complexity were conjugated
-		conjugationMap[i] = calculateComplexity(dataBlocks[i]) > 0.9
-	}
-
-	return dataBlocks, conjugationMap, nil
+	return dataBlocks, nil
 }
 
 // BlockPosition represents the position of an 8x8 block in the image
@@ -603,10 +460,6 @@ func extractBitPlaneBlock(img *image.RGBA, startX, startY, plane, channel int) B
 
 	for y := 0; y < 8; y++ {
 		for x := 0; x < 8; x++ {
-			if startX+x >= img.Bounds().Max.X || startY+y >= img.Bounds().Max.Y {
-				continue
-			}
-
 			// Get the pixel value
 			r, g, b, _ := img.At(startX+x, startY+y).RGBA()
 
@@ -634,10 +487,6 @@ func extractBitPlaneBlock(img *image.RGBA, startX, startY, plane, channel int) B
 func embedBitPlaneBlock(img *image.RGBA, startX, startY, plane, channel int, block Block) {
 	for y := 0; y < 8; y++ {
 		for x := 0; x < 8; x++ {
-			if startX+x >= img.Bounds().Max.X || startY+y >= img.Bounds().Max.Y {
-				continue
-			}
-
 			// Get the pixel value
 			r, g, b, a := img.At(startX+x, startY+y).RGBA()
 

@@ -1,5 +1,3 @@
-// lsbhandlers.go
-
 package api
 
 import (

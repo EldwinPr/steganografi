@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Steganography Tool</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Audio Steganography Tool</h1>
+        
+        <div class="method-cards">
+            <a href="/" class="method-card">
+                <div class="method-icon">🖼️</div>
+                <h3>Image Steganography</h3>
+            </a>
+            <a href="/audio" class="method-card active">
+                <div class="method-icon">🔊</div>
+                <h3>Audio Steganography</h3>
+            </a>
+            <a href="/video" class="method-card">
+                <div class="method-icon">🎬</div>
+                <h3>Video Steganography</h3>
+            </a>
+        </div>        
+        
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="encode">Encode</button>
+            <button class="tab-btn" data-tab="decode">Decode</button>
+        </div>
+        
+        <div class="tab-content active" id="encode-tab">
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" data-subtab="encode-text">Text Message</button>
+            </div>
+            
+            <div class="sub-tab-content active" id="encode-text-tab">
+                <h2>Encode Text in Audio</h2>
+                <form id="encode-text-audio-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="encode-text-audio-file">Select Carrier Audio: (WAV only)</label>
+                        <input type="file" id="encode-text-audio-file" name="audio" accept=".wav" required>
+                        <span class="file-name">No file selected</span>
+                        <div class="audio-preview" id="encode-text-audio-file-preview"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="encode-text-audio-message">Message:</label>
+                        <textarea id="encode-text-audio-message" name="message" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="encode-text-audio-method">Bits Per Sample:</label>
+                        <select id="encode-text-audio-method" name="bitsPerSample">
+                            <option value="1">1 bit (Highest Quality)</option>
+                            <option value="2" selected>2 bits (Recommended)</option>
+                            <option value="3">3 bits (More Capacity)</option>
+                            <option value="4">4 bits (Maximum Capacity)</option>
+                        </select>
+                        <div class="help-text">
+                            <p>Higher values allow more data to be hidden but may reduce audio quality.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="encode-text-audio-seed">Seed (optional):</label>
+                        <input type="text" id="encode-text-audio-seed" name="seed" placeholder="Leave empty for default seed (-1)">
+                    </div>
+                    
+                    <div class="capacity-info" id="encode-text-capacity-info">
+                        <p>Upload a WAV file to see capacity information.</p>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">Encode</button>
+                </form>
+                <div class="encode-result-container"></div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="decode-tab">
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" data-subtab="decode-text">Text Message</button>
+            </div>
+            
+            <div class="sub-tab-content active" id="decode-text-tab">
+                <h2>Decode Text from Audio</h2>
+                <form id="decode-text-audio-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="decode-text-audio-file">Select Encoded Audio: (WAV only)</label>
+                        <input type="file" id="decode-text-audio-file" name="audio" accept=".wav" required>
+                        <span class="file-name">No file selected</span>
+                        <div class="audio-preview" id="decode-text-audio-file-preview"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="decode-text-audio-method">Bits Per Sample:</label>
+                        <select id="decode-text-audio-method" name="bitsPerSample">
+                            <option value="1">1 bit</option>
+                            <option value="2" selected>2 bits</option>
+                            <option value="3">3 bits</option>
+                            <option value="4">4 bits</option>
+                        </select>
+                        <div class="help-text">
+                            <p>Must match the value used during encoding.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="decode-text-audio-seed">Encryption Seed:</label>
+                        <input type="text" id="decode-text-audio-seed" name="seed" placeholder="Enter the same seed used for encoding (default: -1)">
+                    </div>
+                    
+                    <button type="submit" class="submit-btn encode-btn">Decode</button>
+                </form>
+                <div class="decode-result-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/audio.js"></script>
+</body>
+</html>

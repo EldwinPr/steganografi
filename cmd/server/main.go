@@ -33,13 +33,28 @@ func main() {
 	http.HandleFunc("/api/bpcs/decode/text", api.HandleBPCSDecodeText)
 	http.HandleFunc("/api/bpcs/decode/file", api.HandleBPCSDecodeFile)
 
+	// Set up Audio Steganography API routes
+	http.HandleFunc("/api/audio/encode/text", api.HandleAudioEncodeText)
+	http.HandleFunc("/api/audio/decode/text", api.HandleAudioDecodeText)
+
+	// Serve the main HTML page
 	// Serve the main HTML page
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
 			return
 		}
-		http.ServeFile(w, r, filepath.Join(cwd, "web", "templates", "index.html"))
+		http.ServeFile(w, r, filepath.Join(cwd, "web", "index.html"))
+	})
+
+	// Serve the audio steganography page
+	http.HandleFunc("/audio", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(cwd, "web", "audio.html"))
+	})
+
+	// Add this if you plan to have a video page later
+	http.HandleFunc("/video", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(cwd, "web", "video.html"))
 	})
 
 	// Start the server

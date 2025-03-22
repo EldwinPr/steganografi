@@ -1,5 +1,3 @@
-// common.go
-
 package api
 
 import (
@@ -20,11 +18,10 @@ type Response struct {
 func sendErrorResponse(w http.ResponseWriter, message string, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	response := Response{
-		Success: false,
-		Message: message,
-	}
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": false,
+		"message": message,
+	})
 }
 
 func sendSuccessResponse(w http.ResponseWriter, message string, data any) {

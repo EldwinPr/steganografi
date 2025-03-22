@@ -37,13 +37,16 @@ func NewVideoEncoder(seed string) (*VideoEncoder, error) {
 	}, nil
 }
 
-// EncodeData embeds binary data into an AVI file using LSB steganography
-func (e *VideoEncoder) EncodeData(inputPath, outputPath string, data []byte) error {
+// EncodeMessage embeds a text message into an AVI file using LSB steganography
+func (e *VideoEncoder) EncodeMessage(inputPath, outputPath, message string) error {
 	// Read AVI file
 	header, videoData, err := readAviFile(inputPath)
 	if err != nil {
 		return err
 	}
+
+	// Convert message to bytes
+	data := []byte(message)
 
 	// Calculate capacity (1 bit per byte)
 	capacityBits := len(videoData)
@@ -81,12 +84,12 @@ func (e *VideoEncoder) EncodeData(inputPath, outputPath string, data []byte) err
 	return writeAviFile(outputPath, header, videoData)
 }
 
-// DecodeData extracts hidden binary data from an AVI file
-func (e *VideoEncoder) DecodeData(inputPath string) ([]byte, error) {
+// DecodeMessage extracts a hidden text message from an AVI file
+func (e *VideoEncoder) DecodeMessage(inputPath string) (string, error) {
 	// Read AVI file
 	_, videoData, err := readAviFile(inputPath)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// Generate pixel indices based on seed
@@ -95,7 +98,7 @@ func (e *VideoEncoder) DecodeData(inputPath string) ([]byte, error) {
 	// Validate indices
 	for _, idx := range indices {
 		if idx >= len(videoData) {
-			return nil, errors.New("pixel index out of bounds during decoding")
+			return "", errors.New("pixel index out of bounds during decoding")
 		}
 	}
 
@@ -110,7 +113,7 @@ func (e *VideoEncoder) DecodeData(inputPath string) ([]byte, error) {
 
 	dataLength := binary.BigEndian.Uint32(lengthBytes[:])
 	if dataLength > uint32(len(videoData)/8) {
-		return nil, errors.New("invalid data length")
+		return "", errors.New("invalid data length")
 	}
 
 	// Generate indices for the full message
@@ -119,7 +122,7 @@ func (e *VideoEncoder) DecodeData(inputPath string) ([]byte, error) {
 	// Validate all indices
 	for _, idx := range indices {
 		if idx >= len(videoData) {
-			return nil, errors.New("pixel index out of bounds during data extraction")
+			return "", errors.New("pixel index out of bounds during data extraction")
 		}
 	}
 
@@ -133,21 +136,7 @@ func (e *VideoEncoder) DecodeData(inputPath string) ([]byte, error) {
 		}
 	}
 
-	return extractedData, nil
-}
-
-// EncodeMessage is a convenience method that encodes a text message
-func (e *VideoEncoder) EncodeMessage(inputPath, outputPath, message string) error {
-	return e.EncodeData(inputPath, outputPath, []byte(message))
-}
-
-// DecodeMessage is a convenience method that decodes a text message
-func (e *VideoEncoder) DecodeMessage(inputPath string) (string, error) {
-	data, err := e.DecodeData(inputPath)
-	if err != nil {
-		return "", err
-	}
-	return string(data), nil
+	return string(extractedData), nil
 }
 
 // Helper functions

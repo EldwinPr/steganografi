@@ -40,10 +40,7 @@ func main() {
 	// Set up Video Steganography API routes
 	http.HandleFunc("/api/video/encode/text", api.HandleVideoEncodeText)
 	http.HandleFunc("/api/video/decode/text", api.HandleVideoDecodeText)
-	http.HandleFunc("/api/video/encode/file", api.HandleVideoEncodeFile)
-	http.HandleFunc("/api/video/decode/file", api.HandleVideoDecodeFile)
 
-	// Serve the main HTML page
 	// Serve the main HTML page
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {

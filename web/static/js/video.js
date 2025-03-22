@@ -48,10 +48,12 @@ document.addEventListener("DOMContentLoaded", function() {
                     // Check if it's a video file
                     if (file.type.startsWith('video/') || file.name.endsWith('.avi')) {
                         preview.innerHTML = `
-                            <video controls width="100%" height="auto">
-                                <source src="${URL.createObjectURL(file)}" type="video/x-msvideo">
-                                Your browser does not support the video tag.
-                            </video>
+                            <div class="image-preview">
+                                <video controls width="100%" height="auto">
+                                    <source src="${URL.createObjectURL(file)}" type="video/x-msvideo">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
                             <div class="file-info">
                                 <strong>File:</strong> ${file.name}<br>
                                 <strong>Size:</strong> ${formatFileSize(file.size)}
@@ -69,31 +71,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // Setup all video previews
     setupVideoPreview("encode-text-video", "encode-text-preview");
-    setupVideoPreview("encode-file-video", "encode-file-video-preview");
     setupVideoPreview("decode-text-video", "decode-text-preview");
-    setupVideoPreview("decode-file-video", "decode-file-preview");
-    
-    // Helper function for file info display
-    function setupFileInfo(inputId, infoId) {
-        const fileInput = document.getElementById(inputId);
-        const fileInfo = document.getElementById(infoId);
-        
-        if (fileInput && fileInfo) {
-            fileInput.addEventListener("change", function() {
-                if (this.files && this.files[0]) {
-                    const file = this.files[0];
-                    const fileSize = formatFileSize(file.size);
-                    fileInfo.innerHTML = `
-                        <strong>File:</strong> ${file.name}<br>
-                        <strong>Type:</strong> ${file.type || "Unknown"}<br>
-                        <strong>Size:</strong> ${fileSize}
-                    `;
-                } else {
-                    fileInfo.innerHTML = "No file selected";
-                }
-            });
-        }
-    }
     
     // Format file size helper function
     function formatFileSize(bytes) {
@@ -105,9 +83,6 @@ document.addEventListener("DOMContentLoaded", function() {
         
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
-    
-    // Setup file info displays
-    setupFileInfo("encode-file-file", "encode-file-info");
     
     // Form submission setup
     function setupFormSubmission(formId, endpoint, responseHandler) {
@@ -159,99 +134,27 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // Setup form submissions for video steganography
     setupFormSubmission("encode-text-form", "/api/video/encode/text", handleEncodeTextResponse);
-    setupFormSubmission("encode-file-form", "/api/video/encode/file", handleEncodeFileResponse);
     setupFormSubmission("decode-text-form", "/api/video/decode/text", handleDecodeTextResponse);
-    setupFormSubmission("decode-file-form", "/api/video/decode/file", handleDecodeFileResponse);
     
     // Response handlers
     function handleEncodeTextResponse(blob, resultContent) {
-        // Create download link for the encoded video
         const url = URL.createObjectURL(blob);
-        
         resultContent.innerHTML = `
             <p>Message encoded successfully!</p>
-            <div class="video-preview">
+            <div class="image-preview">
                 <video controls width="100%" height="auto">
                     <source src="${url}" type="video/x-msvideo">
                     Your browser does not support the video tag.
                 </video>
             </div>
-            <a href="${url}" download="stego_video.avi" class="btn" style="margin-top: 15px;">
-                Download Encoded Video
-            </a>
-        `;
-    }
-    
-    function handleEncodeFileResponse(blob, resultContent) {
-        // Create download link for the encoded video
-        const url = URL.createObjectURL(blob);
-        
-        resultContent.innerHTML = `
-            <p>File hidden successfully!</p>
-            <div class="video-preview">
-                <video controls width="100%" height="auto">
-                    <source src="${url}" type="video/x-msvideo">
-                    Your browser does not support the video tag.
-                </video>
-            </div>
-            <a href="${url}" download="stego_video.avi" class="btn" style="margin-top: 15px;">
-                Download Encoded Video
-            </a>
+            <a href="${url}" download="stego_video.avi" class="download-btn">Download Video</a>
         `;
     }
     
     function handleDecodeTextResponse(data, resultContent) {
-        if (data.success) {
-            resultContent.innerHTML = `
-                <p>Message decoded successfully:</p>
-                <div class="message-box">${data.data.message}</div>
-            `;
-        } else {
-            throw new Error(data.message);
-        }
-    }
-    
-    function handleDecodeFileResponse(data, resultContent) {
-        if (data.success) {
-            const fileData = data.data.fileData;
-            const fileName = data.data.fileName;
-            const fileType = data.data.fileType || "";
-            const fileUrl = `data:${fileType};base64,${fileData}`;
-            
-            let filePreview = "";
-            
-            // Create appropriate preview based on file type
-            if (fileType.startsWith("image/")) {
-                filePreview = `<img src="${fileUrl}" alt="${fileName}" class="file-preview-image">`;
-            } else if (fileType.startsWith("audio/")) {
-                filePreview = `<audio controls class="file-preview-audio"><source src="${fileUrl}" type="${fileType}">Your browser does not support audio playback.</audio>`;
-            } else if (fileType.startsWith("video/")) {
-                filePreview = `<video controls class="file-preview-video"><source src="${fileUrl}" type="${fileType}">Your browser does not support video playback.</video>`;
-            } else if (fileType === "application/pdf") {
-                filePreview = `<iframe src="${fileUrl}" class="file-preview-pdf"></iframe>`;
-            } else if (fileType.startsWith("text/") || fileType === "application/json") {
-                // For text files, we'll need to decode and display
-                const textContent = atob(fileData);
-                filePreview = `<pre class="file-preview-text">${textContent}</pre>`;
-            } else {
-                filePreview = `<p>Preview not available for this file type.</p>`;
-            }
-            
-            resultContent.innerHTML = `
-                <p>File extracted successfully!</p>
-                <div class="file-info">
-                    <strong>File:</strong> ${fileName}<br>
-                    <strong>Type:</strong> ${fileType || "Unknown"}<br>
-                </div>
-                <div class="file-preview">
-                    ${filePreview}
-                </div>
-                <a href="${fileUrl}" download="${fileName}" class="btn" style="margin-top: 15px;">
-                    Download Extracted File
-                </a>
-            `;
-        } else {
-            throw new Error(data.message);
-        }
+        resultContent.innerHTML = `
+            <p>Message decoded successfully!</p>
+            <div class="message-box">${data.data.message}</div>
+        `;
     }
 });

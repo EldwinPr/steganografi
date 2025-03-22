@@ -33,7 +33,6 @@
         <div class="tab-content active" id="encode-tab">
             <div class="sub-tabs">
                 <button class="sub-tab-btn active" data-subtab="encode-text">Text Message</button>
-                <button class="sub-tab-btn" data-subtab="encode-file">Hide File</button>
             </div>
             
             <div class="sub-tab-content active" id="encode-text-tab">
@@ -66,44 +65,11 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="sub-tab-content" id="encode-file-tab">
-                <h2>Hide File in Video</h2>
-                
-                <form id="encode-file-form" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="encode-file-video">Select Carrier Video: (AVI format only)</label>
-                        <input type="file" id="encode-file-video" name="video" accept=".avi" required>
-                        <div class="video-preview" id="encode-file-video-preview"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="encode-file-file">Select File to Hide:</label>
-                        <input type="file" id="encode-file-file" name="dataFile" required>
-                        <div class="file-info" id="encode-file-info"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="encode-file-seed">Seed (optional):</label>
-                        <input type="text" id="encode-file-seed" name="seed" placeholder="Leave empty for default seed (-1)">
-                    </div>
-                    
-                    <button type="submit" class="btn">Hide File</button>
-                </form>
-                
-                <div class="result" id="encode-file-result">
-                    <h3>Result:</h3>
-                    <div class="result-content">
-                        <p>Your encoded video will appear here.</p>
-                    </div>
-                </div>
-            </div>
         </div>
         
         <div class="tab-content" id="decode-tab">
             <div class="sub-tabs">
                 <button class="sub-tab-btn active" data-subtab="decode-text">Text Message</button>
-                <button class="sub-tab-btn" data-subtab="decode-file">Extract File</button>
             </div>
             
             <div class="sub-tab-content active" id="decode-text-tab">
@@ -111,14 +77,14 @@
                 
                 <form id="decode-text-form" enctype="multipart/form-data">
                     <div class="form-group">
-                        <label for="decode-text-video">Select Video: (AVI format only)</label>
+                        <label for="decode-text-video">Select Video with Hidden Message: (AVI format only)</label>
                         <input type="file" id="decode-text-video" name="video" accept=".avi" required>
                         <div class="video-preview" id="decode-text-preview"></div>
                     </div>
                     
                     <div class="form-group">
-                        <label for="decode-text-seed">Seed:</label>
-                        <input type="text" id="decode-text-seed" name="seed" placeholder="Enter the same seed used for encoding (default: -1)">
+                        <label for="decode-text-seed">Seed (if used during encoding):</label>
+                        <input type="text" id="decode-text-seed" name="seed" placeholder="Leave empty for default seed (-1)">
                     </div>
                     
                     <button type="submit" class="btn">Decode Message</button>
@@ -127,33 +93,7 @@
                 <div class="result" id="decode-text-result">
                     <h3>Result:</h3>
                     <div class="result-content">
-                        <p>Decoded message will appear here.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="sub-tab-content" id="decode-file-tab">
-                <h2>Extract File from Video</h2>
-                
-                <form id="decode-file-form" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="decode-file-video">Select Video: (AVI format only)</label>
-                        <input type="file" id="decode-file-video" name="video" accept=".avi" required>
-                        <div class="video-preview" id="decode-file-preview"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="decode-file-seed">Seed:</label>
-                        <input type="text" id="decode-file-seed" name="seed" placeholder="Enter the same seed used for encoding (default: -1)">
-                    </div>
-                    
-                    <button type="submit" class="btn">Extract File</button>
-                </form>
-                
-                <div class="result" id="decode-file-result">
-                    <h3>Result:</h3>
-                    <div class="result-content">
-                        <p>Extracted file will appear here.</p>
+                        <p>The hidden message will appear here.</p>
                     </div>
                 </div>
             </div>

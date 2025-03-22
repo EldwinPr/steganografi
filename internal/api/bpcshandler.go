@@ -1,5 +1,3 @@
-// bpcshandlers.go
-
 package api
 
 import (

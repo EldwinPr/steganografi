@@ -1,5 +1,3 @@
-// fileutils.go
-
 package api
 
 import (
